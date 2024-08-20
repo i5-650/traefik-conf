@@ -1,0 +1,14 @@
+http:
+    middlewares: 
+        coraza-owasp:
+            plugin: 
+                coraza:
+                    directives: 
+                        - Include @coraza.conf-recommended
+                        - Include @crs-setup.conf.example
+                        - Include @owasp_crs/*.conf
+                        # TODO issue / pr to fix the issue linked to this
+                        - SecRequestBodyAccess Off
+                        # - SecRuleRemoveByTag 'OWASP_CRS/POLICY/SIZE_LIMIT'
+                        - SecRuleEngine On
+

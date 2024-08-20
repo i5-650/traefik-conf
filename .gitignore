@@ -1,0 +1,9 @@
+# Traefik volumes 
+traefik.d/logs/*
+traefik.d/data/*
+!traefik.d/logs/.gitkeep
+!traefik.d/data/.gitkeep
+!traefik.d/config/.gitkeep
+
+# Environments
+.env

@@ -1,0 +1,63 @@
+version: '3'
+
+services:
+    traefik-server:
+        image: traefik:latest
+        container_name: traefik-server
+        restart: unless-stopped
+        dns: 1.1.1.1
+        command:
+            # Global
+            - --global.sendanonymoususage=false
+            - --global.checknewversion=false
+            - --serverstransport.insecureskipverify=true
+            # Logs
+            - --log.level=DEBUG
+            - --log.filepath=/logs/traefik.log
+            - --accesslog=true
+            - --accesslog.filepath=/logs/access.log
+            # Providers - Docker
+            - --providers.docker=true
+            - --providers.docker.exposedbydefault=false
+            # Providers - file
+            - --providers.file=true
+            - --providers.file.watch=true
+            - --providers.file.directory=/config
+            # Entrypoint - HTTP
+            - --entrypoints.http.address=:80
+            - --entrypoints.http.http.redirections.entrypoint.to=https
+            - --entrypoints.http.http.redirections.entrypoint.scheme=https
+            - --entrypoints.http.http.redirections.entrypoint.permanent=true
+            # Entrypoint - HTTPS
+            - --entrypoints.https.address=:443
+            - --entrypoints.https.http.tls=true
+            # Dashboard
+            - --api.dashboard=true
+            # Plugin - Coraza
+            - --experimental.plugins.coraza.moduleName=github.com/jcchavezs/coraza-http-wasm-traefik
+            - --experimental.plugins.coraza.version=v0.2.2
+            # Plugin - Cloudflare Warp
+            - --experimental.plugins.cloudflarewarp.moduleName=github.com/BetterCorp/cloudflarewarp
+            - --experimental.plugins.cloudflarewarp.version=v1.3.0
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - ./traefik.d/config/:/config/:ro
+            - ./traefik.d/data/:/data/:rw
+            - ./traefik.d/logs/:/logs/:rw
+        ports:
+            - "80:80"
+            - "443:443"
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.services.traefik.loadbalancer.server.port=443"
+            - "traefik.http.routers.traefik.rule=Host(`${TRAEFIK_DASHBOARD_DOMAIN:?}`)"
+            - "traefik.http.routers.traefik.service=api@internal"
+            - "traefik.http.routers.traefik.entrypoints=https"
+            - "traefik.http.routers.traefik.middlewares=traefik-auth@docker"
+            - "traefik.http.routers.traefik.tls=true"
+            - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH:?}"
+            - "traefik.http.middlewares.traefik-auth.basicauth.removeHeader=true"
+
+networks:
+    traefik:
+        external: true
