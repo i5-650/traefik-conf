@@ -1,5 +1,3 @@
-version: '3'
-
 services:
     traefik-server:
         image: traefik:latest
@@ -36,9 +34,6 @@ services:
             # Plugin - Coraza
             - --experimental.plugins.coraza.moduleName=github.com/jcchavezs/coraza-http-wasm-traefik
             - --experimental.plugins.coraza.version=v0.2.2
-            # Plugin - Cloudflare Warp
-            - --experimental.plugins.cloudflarewarp.moduleName=github.com/BetterCorp/cloudflarewarp
-            - --experimental.plugins.cloudflarewarp.version=v1.3.0
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock:ro
             - ./traefik.d/config/:/config/:ro
@@ -47,6 +42,8 @@ services:
         ports:
             - "80:80"
             - "443:443"
+        networks:
+            - traefik
         labels:
             - "traefik.enable=true"
             - "traefik.http.services.traefik.loadbalancer.server.port=443"
